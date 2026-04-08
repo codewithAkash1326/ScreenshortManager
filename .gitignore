@@ -1,0 +1,41 @@
+# OS artifacts
+.DS_Store
+Thumbs.db
+
+# Python cache and build output
+__pycache__/
+*.py[cod]
+*.pyo
+*.egg-info/
+build/
+dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+ENV/
+env/
+
+# Environment & secrets
+.env
+*.env.local
+*.env.*
+.python-version
+
+# Logs & coverage
+*.log
+.coverage*
+
+# IDE/editor settings
+.vscode/
+.idea/
+
+# Node/JS (if added later)
+node_modules/
+coverage/
+
+# Alembic migration cache
+alembic/__pycache__/
