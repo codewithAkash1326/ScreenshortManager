@@ -9,6 +9,9 @@ __pycache__/
 *.egg-info/
 build/
 dist/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
 # Virtual environments
 venv/
@@ -19,6 +22,8 @@ env/
 # Environment & secrets
 .env
 *.env.local
+*.env.*
+.python-version
 
 # Logs & coverage
 *.log
@@ -32,3 +37,5 @@ env/
 node_modules/
 coverage/
 
+# Alembic migration cache
+alembic/__pycache__/
