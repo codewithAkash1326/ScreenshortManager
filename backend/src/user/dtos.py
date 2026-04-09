@@ -13,3 +13,8 @@ class UserLogin(BaseModel):
 
     user_name: str
     password: str
+
+
+class UserCreatedResponse(BaseModel):
+    user_name: str
+    user_id: int

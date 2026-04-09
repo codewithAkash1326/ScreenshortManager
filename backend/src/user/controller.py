@@ -5,6 +5,7 @@ from src.user.dtos import UserRegisterPayload, UserLogin
 from src.user.models import User
 from fastapi import HTTPException
 from pwdlib import PasswordHash
+from src.user.dtos import UserCreatedResponse
 from datetime import datetime, timedelta
 from src.utils.settings import settings
 import jwt
@@ -52,12 +53,7 @@ def register_user(body: UserRegisterPayload, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
 
-    return {
-        "user_id": new_user.user_id,
-        "name": new_user.name,
-        "user_name": new_user.user_name,
-        "email": new_user.email,
-    }
+    return UserCreatedResponse(user_name=new_user.user_name, user_id=new_user.user_id)
 
 
 def login(body: UserLogin, db: Session = Depends(get_db)):
@@ -87,4 +83,10 @@ def login(body: UserLogin, db: Session = Depends(get_db)):
         algorithm=settings.ALGORITHM,
     )
 
-    return {"messagge": "Login succesfully", "token": token}
+    return {
+        "messagge": "Login succesfully",
+        "token": token,
+        "user_details": UserCreatedResponse(
+            user_name=user.user_name, user_id=user.user_id
+        ),
+    }

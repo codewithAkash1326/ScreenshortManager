@@ -9,6 +9,8 @@ from src.upload.models import Screenshot
 from typing import List, Dict
 from sqlalchemy import func, select
 from keybert import KeyBERT
+from src.user.dtos import UserCreatedResponse
+from src.utils.helpers import is_authenticated
 import re
 
 
@@ -43,7 +45,11 @@ def generate_tags(text):
         return []
 
 
-async def upload_image(file: UploadFile = File(...), db: Session = Depends(get_db)):
+async def upload_image(
+    file: UploadFile = File(...),
+    db: Session = Depends(get_db),
+    user: UserCreatedResponse = Depends(is_authenticated),
+):
     contents = await file.read()
     image = Image.open(io.BytesIO(contents))
 
