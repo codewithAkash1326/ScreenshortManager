@@ -15,6 +15,6 @@ class UserLogin(BaseModel):
     password: str
 
 
-class UserCreatedResponse(BaseModel):
+class User(BaseModel):
     user_name: str
     user_id: int

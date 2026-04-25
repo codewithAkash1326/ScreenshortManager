@@ -8,7 +8,6 @@ class AuthService {
   AuthService({ApiService? api}) : _api = api ?? Get.find<ApiService>();
 
   final ApiService _api;
-
   Future<String> login({
     required String userName,
     required String password,
@@ -17,10 +16,21 @@ class AuthService {
       ApiRoutes.login,
       data: {"user_name": userName, "password": password},
     );
-    if (resp.statusCode == 200 && resp.data?['token'] != null) {
-      return resp.data['token'] as String;
+
+    final responseData = resp.data;
+
+    if (resp.statusCode == 200 &&
+        responseData != null &&
+        responseData['data'] != null &&
+        responseData['data'].isNotEmpty) {
+      final token = responseData['data'][0]['token'];
+
+      if (token != null) {
+        return token as String;
+      }
     }
-    throw Exception(resp.data?['detail'] ?? 'Login failed');
+
+    throw Exception(responseData?['error']?['message'] ?? 'Login failed');
   }
 
   Future<void> register({

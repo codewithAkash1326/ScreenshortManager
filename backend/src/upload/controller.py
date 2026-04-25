@@ -1,22 +1,24 @@
-from fastapi import Depends, File, UploadFile
+from fastapi import Depends, File, UploadFile, Request
+from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 from src.utils.db import get_db
 import cloudinary.uploader
-from PIL import Image
+from PIL import Image as PILImage
+from src.user.dtos import User
 import io
 import pytesseract
-from src.upload.models import Screenshot
+from src.upload.models import Image, Tag, ImageTag
+from src.upload.dtos import ErrorResponse, CommonResponse
 from typing import List, Dict
 from sqlalchemy import func, select
 from keybert import KeyBERT
-from src.user.dtos import UserCreatedResponse
 from src.utils.helpers import is_authenticated
 import re
 
 
 def clean_text(text):
     text = text.lower()
-    text = re.sub(r"[^\w\s]", " ", text)  # remove symbols
+    text = re.sub(r"[^\w\s]", " ", text)
     text = re.sub(r"\s+", " ", text).strip()
 
     return text
@@ -45,50 +47,122 @@ def generate_tags(text):
         return []
 
 
+def save_image_with_tags(db, user_id, image_url, tags):
+    # Step 1: Save image
+    new_image = Image(user_id=user_id, image_url=image_url)
+    db.add(new_image)
+    db.commit()
+    db.refresh(new_image)
+
+    # Step 2: Get existing tags
+    existing_tags = db.query(Tag).filter(Tag.name.in_(tags)).all()
+
+    existing_tag_names = {tag.name for tag in existing_tags}
+
+    # Step 3: Create missing tags
+    new_tags = []
+    for tag_name in tags:
+        if tag_name not in existing_tag_names:
+            tag = Tag(name=tag_name)
+            db.add(tag)
+            new_tags.append(tag)
+
+    db.commit()
+
+    # Step 4: Combine all tags
+    all_tags = existing_tags + new_tags
+
+    # Step 5: Insert into mapping table
+    for tag in all_tags:
+        db.add(ImageTag(image_id=new_image.id, tag_id=tag.id))
+
+    db.commit()
+
+    return {"tags": tags}
+
+
 async def upload_image(
     file: UploadFile = File(...),
     db: Session = Depends(get_db),
-    user: UserCreatedResponse = Depends(is_authenticated),
+    user: User = Depends(is_authenticated),
 ):
     contents = await file.read()
-    image = Image.open(io.BytesIO(contents))
+    image = PILImage.open(io.BytesIO(contents))
 
     image = image.convert("L")
 
     text = pytesseract.image_to_string(image)
 
-    # 5. Generate tags from text
     tags = generate_tags(text)
 
     cloud_data = await upload_to_cloudinary(contents)
 
-    new_item = Screenshot(
-        image_url=cloud_data["url"],
-        public_id=cloud_data["public_id"],
-        extracted_text=text,
-        tags=tags,
-    )
-
-    db.add(new_item)
-    db.commit()
-    db.refresh(new_item)
-
-    return {"text": text, "tags": tags}
+    return save_image_with_tags(db, user.user_id, cloud_data["url"], tags)
 
 
-def get_tags_with_preview(db: Session) -> List[Dict]:
-    # 1. Convert the ARRAY tags into rows
-    tag_column = func.unnest(Screenshot.tags).label("tag")
+def search_image(
+    query, db: Session = Depends(get_db), user: User = Depends(is_authenticated)
+):
 
-    # 2. Build the select statement
+    if not query.strip():
+        return JSONResponse(
+            status_code=400,
+            content=CommonResponse(
+                data=None,
+                error=ErrorResponse(code=400, message="Query cannot be empty"),
+            ).dict(),
+        )
+
     stmt = (
-        select(tag_column, Screenshot.image_url)
-        .distinct(tag_column)  # DISTINCT ON each tag
-        .order_by(tag_column, Screenshot.created_at.desc())  # pick latest image
+        select(Image.image_url)
+        .join(ImageTag, Image.id == ImageTag.image_id)
+        .join(Tag, Tag.id == ImageTag.tag_id)
+        .where(Image.user_id == user.user_id, Tag.name.ilike(f"%{query}%"))
     )
 
-    # 3. Execute the query
-    results = db.execute(stmt).all()
+    res = db.execute(stmt).scalars().all()
 
-    # 4. Convert to JSON-friendly list
-    return [{"tag": row.tag, "preview": row.image_url} for row in results]
+    if not res:
+        return JSONResponse(
+            status_code=404,
+            content=CommonResponse(
+                data=[],
+                error=ErrorResponse(code=404, message="No results found"),
+            ).dict(),
+        )
+
+    return JSONResponse(
+        status_code=200,
+        content=CommonResponse(data=res, error=None).dict(),
+    )
+
+
+def get_tags_with_preview(
+    db: Session, user: User = Depends(is_authenticated)
+) -> List[Dict]:
+
+    stmt = (
+        select(Tag.name, Image.image_url)
+        .join(ImageTag, Image.id == ImageTag.image_id)
+        .join(Tag, Tag.id == ImageTag.tag_id)
+        .where(Image.user_id == user.user_id)
+        .distinct(Tag.name)
+    )
+
+    results = db.execute(stmt).all()
+    data = []
+    for tag, image_url in results:
+        data.append({"tag": tag, "image_url": image_url})
+    print(results)
+
+    if not results:
+        return JSONResponse(
+            status_code=404,
+            content=CommonResponse(
+                data=[], error=ErrorResponse(code=404, message="No results found")
+            ).dict(),
+        )
+
+    return JSONResponse(
+        status_code=200, content=CommonResponse(data=data, error=None).dict()
+    )

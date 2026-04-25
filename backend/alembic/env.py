@@ -5,8 +5,7 @@ from sqlalchemy import pool
 from src.utils.db import Base
 from src.utils.settings import settings
 from src.user.models import User
-from src.upload.models import Screenshot
-
+from src.upload.models import Image, Tag, ImageTag
 from alembic import context
 
 # this is the Alembic Config object, which provides

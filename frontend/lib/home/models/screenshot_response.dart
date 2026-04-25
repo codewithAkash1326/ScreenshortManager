@@ -5,9 +5,11 @@ class ScreenshotResponse {
 
   ScreenshotResponse({required this.items});
 
-  factory ScreenshotResponse.fromJson(List<dynamic> jsonList) {
+  factory ScreenshotResponse.fromJson(Map<String, dynamic> json) {
+    final List dataList = json['data'] ?? [];
+
     return ScreenshotResponse(
-      items: jsonList.map((e) => ScreenshotItem.fromJson(e)).toList(),
+      items: dataList.map((e) => ScreenshotItem.fromJson(e)).toList(),
     );
   }
 }
