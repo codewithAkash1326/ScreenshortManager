@@ -3,7 +3,6 @@ from sqlalchemy.orm import Session
 from src.utils.db import get_db
 from src.utils.settings import settings
 from src.user.models import User
-from src.user.dtos import UserCreatedResponse
 import jwt
 
 from jwt import InvalidTokenError
@@ -31,7 +30,7 @@ def is_authenticated(request: Request, db: Session = Depends(get_db)):
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="User not exixts"
             )
 
-        return UserCreatedResponse(user_name=user.user_name, user_id=user.user_id)
+        return User(user_name=user.user_name, user_id=user.user_id)
 
     except InvalidTokenError:
         raise HTTPException(

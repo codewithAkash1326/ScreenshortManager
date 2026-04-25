@@ -9,6 +9,6 @@ class HomeService {
     print("api calling");
     final resp = await _api.dio.get('/screenshot/get_images');
     final data = resp.data as List<dynamic>;
-    return ScreenshotResponse.fromJson(data);
+    return ScreenshotResponse.fromJson(data as Map<String, dynamic>);
   }
 }

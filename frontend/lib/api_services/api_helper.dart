@@ -28,13 +28,12 @@ class ApiService {
           final token = box.read('token');
 
           if (token != null) {
-            options.headers["Authorization"] = "Bearer $token";
+            options.headers["Authorization"] = "$token";
           }
 
           return handler.next(options);
         },
         onError: (error, handler) {
-          // Handle global errors (like 401)
           Get.toNamed(AppRoutes.LOGIN);
           return handler.next(error);
         },
