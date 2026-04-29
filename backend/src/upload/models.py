@@ -6,7 +6,7 @@ from datetime import datetime
 class Image(Base):
     __tablename__ = "images"
 
-    id = Column(Integer, primary_key=True)
+    id = Column(Integer, primary_key=True, autoincrement=True)
     user_id = Column(Integer, ForeignKey("user.user_id", ondelete="CASCADE"))
     image_url = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
