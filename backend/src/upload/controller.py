@@ -1,6 +1,8 @@
 from fastapi import Depends, File, UploadFile, Request
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
+from sqlalchemy import func
+
 from src.utils.db import get_db
 import cloudinary.uploader
 from PIL import Image as PILImage
@@ -78,7 +80,13 @@ def save_image_with_tags(db, user_id, image_url, tags):
 
     db.commit()
 
-    return {"tags": tags}
+    return JSONResponse(
+        status_code=200,
+        content=CommonResponse(
+            data={"tags": tags},
+            error=ErrorResponse(code=200, message="image uploaded succesfully"),
+        ).dict(),
+    )
 
 
 async def upload_image(
@@ -142,18 +150,26 @@ def get_tags_with_preview(
 ) -> List[Dict]:
 
     stmt = (
-        select(Tag.name, Image.image_url)
+        select(func.string_agg(Tag.name, ", ").label("tags"), Image.image_url)
         .join(ImageTag, Image.id == ImageTag.image_id)
         .join(Tag, Tag.id == ImageTag.tag_id)
         .where(Image.user_id == user.user_id)
-        .distinct(Tag.name)
+        .group_by(Image.image_url)
     )
 
     results = db.execute(stmt).all()
     data = []
-    for tag, image_url in results:
-        data.append({"tag": tag, "image_url": image_url})
+
     print(results)
+
+    for tags_str, image_url in results:
+
+        data.append(
+            {
+                "image_url": image_url,
+                "tags": [tag.strip() for tag in tags_str.split(",")],
+            }
+        )
 
     if not results:
         return JSONResponse(
