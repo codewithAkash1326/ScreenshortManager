@@ -8,7 +8,10 @@ class HomeService {
   Future<ScreenshotResponse> fetchScreenshots() async {
     print("api calling");
     final resp = await _api.dio.get('/screenshot/get_images');
-    final data = resp.data as List<dynamic>;
-    return ScreenshotResponse.fromJson(data as Map<String, dynamic>);
+
+    final data = resp.data as Map<String, dynamic>;
+    print(resp.statusCode);
+    print(resp.data);
+    return ScreenshotResponse.fromJson(data);
   }
 }

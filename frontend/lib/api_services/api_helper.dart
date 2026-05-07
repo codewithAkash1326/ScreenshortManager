@@ -34,8 +34,11 @@ class ApiService {
           return handler.next(options);
         },
         onError: (error, handler) {
-          Get.toNamed(AppRoutes.LOGIN);
-          return handler.next(error);
+          if (error.response!.statusCode == 401) {
+            Get.toNamed(AppRoutes.LOGIN);
+          }
+
+          //return handler.next(error);
         },
       ),
     );

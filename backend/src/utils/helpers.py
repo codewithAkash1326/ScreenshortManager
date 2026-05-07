@@ -4,8 +4,7 @@ from src.utils.db import get_db
 from src.utils.settings import settings
 from src.user.models import User
 import jwt
-
-from jwt import InvalidTokenError
+from jwt import InvalidTokenError , ExpiredSignatureError
 
 
 def is_authenticated(request: Request, db: Session = Depends(get_db)):
@@ -19,11 +18,11 @@ def is_authenticated(request: Request, db: Session = Depends(get_db)):
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="token is empty"
             )
 
-        data = jwt.decode(token, settings.TOKEN_SECRET_KEY, settings.ALGORITHM)
+        data = jwt.decode(token, settings.TOKEN_SECRET_KEY,  algorithms=[settings.ALGORITHM],)
 
         user_id = data.get("_id")
 
-        user = db.query(User).filter(user_id == User.user_id).first()
+        user = db.query(User).filter(User.user_id == user_id).first()
 
         if not user:
             raise HTTPException(
@@ -31,8 +30,10 @@ def is_authenticated(request: Request, db: Session = Depends(get_db)):
             )
 
         return User(user_name=user.user_name, user_id=user.user_id)
-
+    except ExpiredSignatureError:
+        raise HTTPException(401, "Token expired")
+    
     except InvalidTokenError:
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED, detail="you are unauthorized"
+            status_code=status.HTTP_401_UNAUTHORIZED, detail="you are unauthorizedssss"
         )
