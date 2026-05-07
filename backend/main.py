@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+import firebase 
 from src.utils.db import Base, engine
 from src.upload.router import screenshot_routes
 from src.user.router import user_routes

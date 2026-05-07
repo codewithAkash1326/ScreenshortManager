@@ -1,13 +1,12 @@
 import 'package:frontend/app_routes.dart';
+import 'package:frontend/auth/bindings/auth_binding.dart';
+import 'package:frontend/auth/view/login_view.dart';
+import 'package:frontend/auth/view/signup_view.dart';
 import 'package:frontend/home/binding/home_binding.dart';
 import 'package:frontend/home/view/home_view.dart';
 import 'package:frontend/home/view/image_view.dart';
-import 'package:frontend/login/binding/login_binding.dart';
-import 'package:frontend/login/view/login_view.dart';
 import 'package:frontend/search/bindings/search_bindings.dart';
 import 'package:frontend/search/view/search_screen.dart';
-import 'package:frontend/signup/binding/signup_binding.dart';
-import 'package:frontend/signup/view/signup_view.dart';
 import 'package:get/get_navigation/get_navigation.dart';
 
 class AppPages {
@@ -15,12 +14,12 @@ class AppPages {
     GetPage(
       name: AppRoutes.LOGIN,
       page: () => const LoginView(),
-      binding: LoginBinding(),
+      binding: AuthBinding(),
     ),
     GetPage(
       name: AppRoutes.SIGNUP,
       page: () => const SignupView(),
-      binding: SignupBinding(),
+      binding: AuthBinding(),
     ),
     GetPage(
       name: AppRoutes.HOME,
