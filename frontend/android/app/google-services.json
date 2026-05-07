@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "815346332105",
+    "project_id": "capturely-5df65",
+    "storage_bucket": "capturely-5df65.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:815346332105:android:51d8cc144544347d6b3818",
+        "android_client_info": {
+          "package_name": "com.akash.capturely"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD8D5C7TZBQflpyEEA2I_iGx8HVZRibMdE"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
