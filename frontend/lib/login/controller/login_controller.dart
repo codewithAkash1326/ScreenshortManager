@@ -25,7 +25,7 @@ class LoginController extends GetxController {
       await box.write('token', token);
       Get.offAllNamed(AppRoutes.HOME);
     } catch (e) {
-      Get.snackbar('Login failed', e.toString());
+      Get.snackbar('Login failed', 'please try again');
     } finally {
       isLoading.value = false;
     }

@@ -1,3 +1,4 @@
+import 'package:frontend/app_routes.dart';
 import 'package:frontend/home/models/screenshot_item.dart';
 import 'package:frontend/home/models/screenshot_response.dart';
 import 'package:frontend/home/services/home_service.dart';
@@ -29,6 +30,10 @@ class HomeController extends GetxController {
       box.remove('token');
 
       Get.offAllNamed('/login');
+    }
+
+    if (index == 1) {
+      Get.toNamed(AppRoutes.SEARCH);
     }
   }
 

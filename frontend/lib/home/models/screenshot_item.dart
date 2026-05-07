@@ -1,9 +1,13 @@
 class ScreenshotItem {
-  final String tag;
-  final String preview;
+  final String imageUrl;
+  final List<String> tags;
 
-  ScreenshotItem({required this.tag, required this.preview});
+  ScreenshotItem({required this.imageUrl, required this.tags});
 
-  factory ScreenshotItem.fromJson(Map<String, dynamic> json) =>
-      ScreenshotItem(tag: json['tag'] ?? '', preview: json['preview'] ?? '');
+  factory ScreenshotItem.fromJson(Map<String, dynamic> json) {
+    return ScreenshotItem(
+      imageUrl: json['image_url'] ?? '',
+      tags: List<String>.from(json['tags'] ?? []),
+    );
+  }
 }

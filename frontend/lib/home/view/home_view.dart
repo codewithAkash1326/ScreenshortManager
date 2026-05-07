@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:frontend/app_routes.dart';
 import 'package:frontend/home/controller/home_controller.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
@@ -16,43 +17,57 @@ class HomeView extends GetView<HomeController> {
         elevation: 0,
         title: const Text('Screenshots', style: TextStyle(color: Colors.white)),
       ),
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-          child: Column(
-            children: [
-              _SearchBar(),
-              const SizedBox(height: 16),
-              Expanded(
-                child: Obx(() {
-                  if (controller.isLoading.value) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-                  if (controller.shots.isEmpty) {
-                    return const Center(
-                      child: Text(
-                        'No screenshots yet',
-                        style: TextStyle(color: Colors.white70),
-                      ),
+      body: RefreshIndicator(
+        onRefresh: () => controller.fetchShots(),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Column(
+              children: [
+                GestureDetector(
+                  onTap: () => Get.toNamed(AppRoutes.SEARCH),
+                  child: AbsorbPointer(child: _SearchBar()),
+                ),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: Obx(() {
+                    if (controller.isLoading.value) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+                    if (controller.shots.isEmpty) {
+                      return ListView(
+                        children: [
+                          SizedBox(height: 200),
+                          Center(
+                            child: Text(
+                              'No screenshots yet',
+                              style: TextStyle(color: Colors.white70),
+                            ),
+                          ),
+                        ],
+                      );
+                    }
+                    return GridView.builder(
+                      itemCount: controller.shots.length,
+                      gridDelegate:
+                          const SliverGridDelegateWithFixedCrossAxisCount(
+                            crossAxisCount: 2,
+                            mainAxisSpacing: 12,
+                            crossAxisSpacing: 12,
+                            childAspectRatio: 0.85,
+                          ),
+                      itemBuilder: (context, index) {
+                        final shot = controller.shots[index];
+                        return _ShotCard(
+                          tags: shot.tags,
+                          preview: shot.imageUrl,
+                        );
+                      },
                     );
-                  }
-                  return GridView.builder(
-                    itemCount: controller.shots.length,
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          mainAxisSpacing: 12,
-                          crossAxisSpacing: 12,
-                          childAspectRatio: 0.85,
-                        ),
-                    itemBuilder: (context, index) {
-                      final shot = controller.shots[index];
-                      return _ShotCard(tag: shot.tag, preview: shot.preview);
-                    },
-                  );
-                }),
-              ),
-            ],
+                  }),
+                ),
+              ],
+            ),
           ),
         ),
       ),
@@ -71,10 +86,13 @@ class HomeView extends GetView<HomeController> {
               selectedIcon: Icon(Icons.home, color: Color(0xFF00D1B2)),
               label: 'Home',
             ),
-            NavigationDestination(
-              icon: Icon(Icons.search, color: Colors.white70),
-              selectedIcon: Icon(Icons.search, color: Color(0xFF00D1B2)),
-              label: 'Search',
+            GestureDetector(
+              onTap: () => Get.toNamed(AppRoutes.SEARCH),
+              child: NavigationDestination(
+                icon: Icon(Icons.search, color: Colors.white70),
+                selectedIcon: Icon(Icons.search, color: Color(0xFF00D1B2)),
+                label: 'Search',
+              ),
             ),
             GestureDetector(
               onTap: () {
@@ -99,6 +117,8 @@ class _SearchBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return TextField(
+      readOnly: true,
+      onTap: () => Get.toNamed(AppRoutes.SEARCH),
       style: const TextStyle(color: Colors.white),
       decoration: InputDecoration(
         hintText: 'Search screenshots, text or tags',
@@ -118,52 +138,70 @@ class _SearchBar extends StatelessWidget {
 }
 
 class _ShotCard extends StatelessWidget {
-  const _ShotCard({required this.tag, required this.preview});
+  const _ShotCard({required this.tags, required this.preview});
 
-  final String tag;
+  final List<String> tags;
   final String preview;
 
   @override
   Widget build(BuildContext context) {
+    final visibleTags = tags.take(2).toList();
+    final remaining = tags.length - visibleTags.length;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(16),
-      child: Container(
-        color: Colors.white.withOpacity(0.06),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            AspectRatio(
-              aspectRatio: 1.2, // smaller height
-              child: Image.network(
-                preview,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: Colors.white12,
-                  alignment: Alignment.center,
-                  child: const Icon(
-                    Icons.image_not_supported,
-                    color: Colors.white54,
+      child: GestureDetector(
+        onTap: () => Get.toNamed(
+          AppRoutes.IMAGE_VIEWER,
+          arguments: {'imageUrl': preview, 'tags': tags},
+        ),
+        child: Container(
+          color: Colors.white.withOpacity(0.06),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// IMAGE
+              AspectRatio(
+                aspectRatio: 1.2,
+                child: Image.network(preview, fit: BoxFit.cover),
+              ),
+
+              /// TAG ROW (FIXED HEIGHT ✅)
+              Padding(
+                padding: const EdgeInsets.all(10),
+                child: SizedBox(
+                  height: 28, // 👈 FIX: prevents overflow
+                  child: Row(
+                    children: [
+                      ...visibleTags.map(
+                        (tag) => Padding(
+                          padding: const EdgeInsets.only(right: 6),
+                          child: _tagChip(tag),
+                        ),
+                      ),
+
+                      if (remaining > 0) _tagChip("+$remaining"),
+                    ],
                   ),
                 ),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return const Center(child: CircularProgressIndicator());
-                },
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-              child: Text(
-                '#$tag',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 14,
-                ),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
+      ),
+    );
+  }
+
+  Widget _tagChip(String text) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.12),
+        borderRadius: BorderRadius.circular(8),
+      ),
+      child: Text(
+        "#$text",
+        style: const TextStyle(color: Colors.white, fontSize: 11),
       ),
     );
   }
