@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:frontend/app_routes.dart';
-import 'package:frontend/signup/controller/signup_controller.dart';
+import 'package:frontend/auth/controller/auth_controller.dart';
 import 'package:get/get.dart';
 
-class SignupView extends GetView<SignupController> {
+class SignupView extends GetView<AuthController> {
   const SignupView({super.key});
 
   @override
@@ -16,12 +16,19 @@ class SignupView extends GetView<SignupController> {
       footerLink: 'Login',
       onFooterTap: () => Get.offAllNamed(AppRoutes.LOGIN),
       onSubmit: controller.signup,
-      isLoading: controller.isLoading,
+      isLoading: controller.isSignupLoading,
       fields: [
-        _AuthField(label: 'Name', controller: controller.nameController, icon: Icons.person_outline),
-        _AuthField(label: 'Username', controller: controller.userNameController, icon: Icons.alternate_email),
-        _AuthField(label: 'Email', controller: controller.emailController, icon: Icons.mail_outline),
-        _AuthField(label: 'Password', controller: controller.passwordController, icon: Icons.lock_outline, obscure: true),
+        _AuthField(
+          label: 'Email',
+          controller: controller.signupEmailController,
+          icon: Icons.mail_outline,
+        ),
+        _AuthField(
+          label: 'Password',
+          controller: controller.signupPasswordController,
+          icon: Icons.lock_outline,
+          obscure: true,
+        ),
       ],
     );
   }
@@ -84,7 +91,10 @@ class _AuthShell extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                        style: Theme.of(context)
+                            .textTheme
+                            .headlineMedium
+                            ?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.w700,
                             ),
@@ -92,7 +102,10 @@ class _AuthShell extends StatelessWidget {
                       const SizedBox(height: 8),
                       Text(
                         subtitle,
-                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                        style: Theme.of(context)
+                            .textTheme
+                            .bodyMedium
+                            ?.copyWith(color: Colors.white70),
                       ),
                       const SizedBox(height: 24),
                       ..._withSpacing(fields, 14),
@@ -104,13 +117,17 @@ class _AuthShell extends StatelessWidget {
                             backgroundColor: const Color(0xFF00D1B2),
                             foregroundColor: Colors.black,
                             padding: const EdgeInsets.symmetric(vertical: 14),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(14),
+                            ),
                           ),
                           child: isLoading.value
                               ? const SizedBox(
                                   height: 18,
                                   width: 18,
-                                  child: CircularProgressIndicator(strokeWidth: 2.2),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.2,
+                                  ),
                                 )
                               : Text(primaryLabel),
                         ),
@@ -125,12 +142,15 @@ class _AuthShell extends StatelessWidget {
                             children: [
                               TextSpan(
                                 text: footerLink,
-                                style: const TextStyle(fontWeight: FontWeight.w600, color: Colors.white),
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.w600,
+                                  color: Colors.white,
+                                ),
                               ),
                             ],
                           ),
                         ),
-                      )
+                      ),
                     ],
                   ),
                 ),
@@ -171,11 +191,7 @@ class _Glows extends StatelessWidget {
           shape: BoxShape.circle,
           color: color,
           boxShadow: [
-            BoxShadow(
-              color: color,
-              blurRadius: 90,
-              spreadRadius: 40,
-            )
+            BoxShadow(color: color, blurRadius: 90, spreadRadius: 40),
           ],
         ),
       );
@@ -224,3 +240,4 @@ List<Widget> _withSpacing(List<Widget> widgets, double gap) {
   }
   return out;
 }
+

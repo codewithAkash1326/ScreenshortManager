@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:frontend/login/controller/login_controller.dart';
-import 'package:frontend/theme/theme_service.dart';
+import 'package:frontend/auth/controller/auth_controller.dart';
 import 'package:get/get.dart';
 
-class LoginView extends GetView<LoginController> {
+class LoginView extends GetView<AuthController> {
   const LoginView({super.key});
 
   @override
@@ -26,34 +25,35 @@ class LoginView extends GetView<LoginController> {
                 Text(
                   'Welcome back',
                   style: Theme.of(context).textTheme.headlineSmall?.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
+                        color: Colors.white,
+                        fontWeight: FontWeight.w700,
+                      ),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   'Sign in to manage your screenshots securely.',
-                  style: Theme.of(
-                    context,
-                  ).textTheme.bodyMedium?.copyWith(color: Colors.white70),
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyMedium
+                      ?.copyWith(color: Colors.white70),
                 ),
                 const SizedBox(height: 24),
                 _AuthField(
-                  label: 'Username',
-                  controller: controller.userNameController,
-                  icon: Icons.alternate_email,
+                  label: 'Email',
+                  controller: controller.loginEmailController,
+                  icon: Icons.mail_outline,
                 ),
                 const SizedBox(height: 14),
                 _AuthField(
                   label: 'Password',
-                  controller: controller.passwordController,
+                  controller: controller.loginPasswordController,
                   icon: Icons.lock_outline,
                   obscure: true,
                 ),
                 const SizedBox(height: 24),
                 Obx(
                   () => ElevatedButton(
-                    onPressed: controller.isLoading.value
+                    onPressed: controller.isLoginLoading.value
                         ? null
                         : controller.login,
                     style: ElevatedButton.styleFrom(
@@ -64,7 +64,7 @@ class LoginView extends GetView<LoginController> {
                         borderRadius: BorderRadius.circular(14),
                       ),
                     ),
-                    child: controller.isLoading.value
+                    child: controller.isLoginLoading.value
                         ? const SizedBox(
                             height: 18,
                             width: 18,
@@ -127,3 +127,4 @@ class _AuthField extends StatelessWidget {
     );
   }
 }
+

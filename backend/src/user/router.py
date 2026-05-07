@@ -3,18 +3,10 @@ from fastapi.responses import JSONResponse
 from src.upload.dtos import CommonResponse, ErrorResponse
 from sqlalchemy.orm import Session
 from src.utils.db import get_db
-from src.user.dtos import UserRegisterPayload, UserLogin
+from src.user.dtos import  UserLogin
 from src.user import controller
 
 user_routes = APIRouter(prefix="/user")
-
-
-@user_routes.post(
-    "/register",
-)
-def register_user(body: UserRegisterPayload, db: Session = Depends(get_db)):
-    return controller.register_user(body, db)
-
 
 @user_routes.post("/login")
 def login(body: UserLogin, db: Session = Depends(get_db)):
@@ -29,4 +21,4 @@ def login(body: UserLogin, db: Session = Depends(get_db)):
             ).dict(),
         )
 
-    return controller.login(body, db)
+    return controller.firebase_login(body, db)
