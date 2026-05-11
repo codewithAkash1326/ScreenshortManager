@@ -36,22 +36,91 @@ class SearchView extends GetView<SearchPageController> {
             ),
           ),
 
-          /// RESULTS
           Expanded(
             child: Obx(() {
               if (controller.isLoading.value) {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (controller.results.isEmpty) {
-                return const Center(
-                  child: Text(
-                    "No results",
-                    style: TextStyle(color: Colors.white70),
+              /// INITIAL STATE
+              if (!controller.hasSearched.value) {
+                return Center(
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        Icons.image_search,
+                        size: 80,
+                        color: Colors.white.withOpacity(0.3),
+                      ),
+                      const SizedBox(height: 16),
+                      const Text(
+                        "Search screenshots",
+                        style: TextStyle(
+                          color: Colors.white70,
+                          fontSize: 18,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
                   ),
                 );
               }
 
+              /// NO RESULTS UI
+              if (controller.noResults.value) {
+                return Center(
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 24),
+                    padding: const EdgeInsets.all(24),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: Colors.white.withOpacity(0.08)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          Icons.hide_image_rounded,
+                          size: 70,
+                          color: Colors.white54,
+                        ),
+                        const SizedBox(height: 18),
+                        const Text(
+                          "No screenshots available",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                        Text(
+                          "Try searching with different keywords",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white.withOpacity(0.65),
+                            fontSize: 14,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              /// ERROR UI
+              if (controller.hasError.value) {
+                return const Center(
+                  child: Text(
+                    "Something went wrong",
+                    style: TextStyle(color: Colors.redAccent, fontSize: 16),
+                  ),
+                );
+              }
+
+              /// GRID
               return GridView.builder(
                 padding: const EdgeInsets.all(12),
                 itemCount: controller.results.length,
@@ -65,7 +134,7 @@ class SearchView extends GetView<SearchPageController> {
                   final image = controller.results[index];
 
                   return ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(16),
                     child: Image.network(
                       image,
                       fit: BoxFit.cover,

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:frontend/app_routes.dart';
 import 'package:frontend/auth/services/auth_service.dart';
 import 'package:frontend/auth/view/verify_email_screen.dart';
+import 'package:frontend/utils/ui_utils.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -13,11 +14,104 @@ class AuthController extends GetxController {
   final loginEmailController = TextEditingController();
   final loginPasswordController = TextEditingController();
 
+  final forgotPasswordEmailController = TextEditingController();
+
+  final forgotPasswordEmailError = ''.obs;
+
+  final isForgotPasswordLoading = false.obs;
+
+  final isResetEmailSent = false.obs;
+
   final signupEmailController = TextEditingController();
+  final signupNameController = TextEditingController();
   final signupPasswordController = TextEditingController();
 
   final isLoginLoading = false.obs;
   final isSignupLoading = false.obs;
+
+  final signupNameError = ''.obs;
+  final signupEmailError = ''.obs;
+  final signupPasswordError = ''.obs;
+
+  final loginEmailError = ''.obs;
+  final loginPasswordError = ''.obs;
+
+  bool validateSignup() {
+    bool isValid = true;
+
+    signupNameError.value = '';
+    signupEmailError.value = '';
+    signupPasswordError.value = '';
+
+    final name = signupNameController.text.trim();
+    final email = signupEmailController.text.trim();
+    final password = signupPasswordController.text;
+
+    if (name.isEmpty) {
+      signupNameError.value = "Name is required";
+      isValid = false;
+    }
+
+    if (email.isEmpty) {
+      signupEmailError.value = "Email is required";
+      isValid = false;
+    } else if (!GetUtils.isEmail(email)) {
+      signupEmailError.value = "Invalid email";
+      isValid = false;
+    }
+
+    if (password.isEmpty) {
+      signupPasswordError.value = "Password is required";
+      isValid = false;
+    } else if (password.length < 6) {
+      signupPasswordError.value = "Password must be at least 6 characters";
+      isValid = false;
+    }
+
+    return isValid;
+  }
+
+  Future<void> sendResetPasswordEmail() async {
+    final email = forgotPasswordEmailController.text.trim();
+
+    forgotPasswordEmailError.value = '';
+
+    if (email.isEmpty) {
+      forgotPasswordEmailError.value = "Email is required";
+      return;
+    }
+
+    if (!GetUtils.isEmail(email)) {
+      forgotPasswordEmailError.value = "Enter a valid email";
+      return;
+    }
+
+    try {
+      isForgotPasswordLoading.value = true;
+
+      print("step1");
+
+      await FirebaseAuth.instance.sendPasswordResetEmail(email: email);
+      print("step2");
+      isResetEmailSent.value = true;
+    } catch (e) {
+      if (e is FirebaseAuthException) {
+        UiUtils.showError(getFirebaseErrorMessage(e.code));
+      } else {
+        UiUtils.showError("Something went wrong");
+      }
+    } finally {
+      isForgotPasswordLoading.value = false;
+    }
+  }
+
+  void goToForgotPassword() {
+    forgotPasswordEmailController.clear();
+    forgotPasswordEmailError.value = '';
+    isResetEmailSent.value = false;
+
+    Get.toNamed(AppRoutes.FORGOT_PASSWORD);
+  }
 
   String getFirebaseErrorMessage(String code) {
     switch (code) {
@@ -56,7 +150,7 @@ class AuthController extends GetxController {
     final email = loginEmailController.text.trim();
     final password = loginPasswordController.text;
     if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Error", "Email and password are required");
+      UiUtils.showError("Email and password are required");
       return;
     }
 
@@ -68,56 +162,39 @@ class AuthController extends GetxController {
         password: password,
       );
 
-      // final user = cred.user;
+      final user = cred.user;
 
-      // if (user != null && !user.emailVerified) {
-      //   await FirebaseAuth.instance.signOut();
+      print("step1");
 
-      //   Get.snackbar(
-      //     "Email not verified",
-      //     "Please verify your email before logging in",
-      //     snackPosition: SnackPosition.BOTTOM,
-      //   );
+      if (user != null && !user.emailVerified) {
+        await FirebaseAuth.instance.signOut();
+        UiUtils.showError("Please verify your email before logging in");
 
-      //   return;
-      // }
+        return;
+      }
+
+      print("step2");
 
       final firebaseToken = await cred.user?.getIdToken();
       if (firebaseToken == null || firebaseToken.isEmpty) {
         throw Exception("Failed to get auth token");
       }
 
-      print("firebase token ");
-      print(firebaseToken);
+      print("step3");
 
       final jwt = await _authService.loginWithFirebaseToken(
         firebaseToken: firebaseToken,
       );
+      print("step4");
 
       await _box.write("token", jwt);
 
       Get.offAllNamed(AppRoutes.HOME);
     } catch (e) {
       if (e is FirebaseAuthException) {
-        Get.snackbar(
-          "Error",
-          getFirebaseErrorMessage(e.code),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 12,
-        );
+        UiUtils.showError(getFirebaseErrorMessage(e.code));
       } else {
-        Get.snackbar(
-          "Error",
-          "Something went wrong",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 12,
-        );
+        UiUtils.showError("Something went wrong");
       }
     } finally {
       isLoginLoading.value = false;
@@ -127,10 +204,8 @@ class AuthController extends GetxController {
   Future<void> signup() async {
     final email = signupEmailController.text.trim();
     final password = signupPasswordController.text;
-    if (email.isEmpty || password.isEmpty) {
-      Get.snackbar("Error", "Email and password are required");
-      return;
-    }
+    final name = signupNameController.text;
+    if (!validateSignup()) return;
 
     try {
       isSignupLoading.value = true;
@@ -139,29 +214,15 @@ class AuthController extends GetxController {
         password: password,
       );
 
+      await cred.user?.updateDisplayName(name);
+
       await cred.user?.sendEmailVerification();
       Get.to(const VerifyEmailScreen());
     } catch (e) {
       if (e is FirebaseAuthException) {
-        Get.snackbar(
-          "Error",
-          getFirebaseErrorMessage(e.code),
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 12,
-        );
+        UiUtils.showError(getFirebaseErrorMessage(e.code));
       } else {
-        Get.snackbar(
-          "Error",
-          "Something went wrong",
-          snackPosition: SnackPosition.BOTTOM,
-          backgroundColor: Colors.black87,
-          colorText: Colors.white,
-          margin: const EdgeInsets.all(16),
-          borderRadius: 12,
-        );
+        UiUtils.showError("Something went wrong");
       }
     } finally {
       isSignupLoading.value = false;

@@ -15,7 +15,7 @@ class SearchService {
 
       return list.map((e) => e.toString()).toList();
     } catch (e) {
-      throw Exception("Search API failed: $e");
+      rethrow;
     }
   }
 }

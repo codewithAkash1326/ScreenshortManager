@@ -20,7 +20,8 @@ import jwt
 def firebase_login(token: str, db: Session = Depends(get_db)):
     try: 
         print("step1")
-        decoded = auth.verify_id_token(token)
+        print(type(token.token))
+        decoded = auth.verify_id_token(token.token)
         print("step2")
         uid = decoded["uid"]
         email = decoded.get("email")
