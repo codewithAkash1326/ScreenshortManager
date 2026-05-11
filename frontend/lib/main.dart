@@ -5,6 +5,7 @@ import 'package:frontend/app_routes.dart';
 import 'package:frontend/bindings/app_binding.dart';
 import 'package:frontend/theme/app_theme.dart';
 import 'package:frontend/theme/theme_service.dart';
+import 'package:frontend/utils/ui_utils.dart';
 import 'package:get/get.dart';
 import 'package:get_storage/get_storage.dart';
 
@@ -40,6 +41,7 @@ class MyApp extends StatelessWidget {
       getPages: AppPages.routes,
       debugShowCheckedModeBanner: false,
       initialBinding: AppBinding(),
+      scaffoldMessengerKey: UiUtils.messengerKey,
       theme: AppTheme.light,
       darkTheme: AppTheme.dark,
       themeMode: themeService.themeMode,

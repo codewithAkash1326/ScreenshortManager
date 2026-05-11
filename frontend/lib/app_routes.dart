@@ -4,4 +4,5 @@ abstract class AppRoutes {
   static const SIGNUP = '/signup';
   static const SEARCH = '/search';
   static const IMAGE_VIEWER = '/image-viewer';
+  static const FORGOT_PASSWORD = '/forgot-password';
 }

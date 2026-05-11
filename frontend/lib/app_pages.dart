@@ -1,5 +1,6 @@
 import 'package:frontend/app_routes.dart';
 import 'package:frontend/auth/bindings/auth_binding.dart';
+import 'package:frontend/auth/view/forgot_password_view.dart';
 import 'package:frontend/auth/view/login_view.dart';
 import 'package:frontend/auth/view/signup_view.dart';
 import 'package:frontend/home/binding/home_binding.dart';
@@ -16,6 +17,12 @@ class AppPages {
       page: () => const LoginView(),
       binding: AuthBinding(),
     ),
+    GetPage(
+      name: AppRoutes.FORGOT_PASSWORD,
+      page: () => const ForgotPasswordView(),
+      binding: AuthBinding(),
+    ),
+
     GetPage(
       name: AppRoutes.SIGNUP,
       page: () => const SignupView(),
