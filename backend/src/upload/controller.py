@@ -182,3 +182,57 @@ def get_tags_with_preview(
     return JSONResponse(
         status_code=200, content=CommonResponse(data=data, error=None).dict()
     )
+
+
+def delete_image(query : str , db : Session = Session(get_db) , user: User = Depends(is_authenticated)):
+    
+    id = int(query)
+    
+    try:
+    
+        image_exist = db.query(Image).filter( Image.id == id,
+        Image.user_id == user.user_id).first()
+        
+        if not image_exist:
+            return JSONResponse(
+                status_code=404,
+                content={
+                    "data": [],
+                    "error": {
+                        "code": 404,
+                        "message": "Image not found"
+                    }
+                }
+            )
+            
+        cloudinary.uploader.destroy(image_exist.public_id)
+        db.delete(image_exist)
+        db.commit()
+        
+        
+        data = [
+            {
+                "message":"deleted succefully"
+            }
+        ]
+        
+        return JSONResponse(
+                status = 201,
+                content = CommonResponse(data = data , error=ErrorResponse(code=000, message="No Error"))
+            )
+        
+        
+            
+    except ValueError:
+        return JSONResponse(
+                status = 400,
+                content = CommonResponse(data = [] , error=ErrorResponse(code=400, message="Invalid image id"))
+            )
+        
+   
+   
+       
+    
+    
+    
+    
