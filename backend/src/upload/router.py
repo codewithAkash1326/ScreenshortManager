@@ -33,3 +33,8 @@ def search_image(
     user: User = Depends(is_authenticated),
 ):
     return controller.search_image(query, db, user)
+
+@screenshot_routes.delete("/delete",)
+def delete_image(query: str = "" , db : Session = Depends(get_db) , user:User = Depends(is_authenticated)):
+    return controller.delete_image(query , db,user)
+    

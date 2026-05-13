@@ -28,7 +28,7 @@ def is_authenticated(request: Request, db: Session = Depends(get_db)):
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED, detail="User not exixts"
             )
-
+        
         return User(user_name=user.user_name, user_id=user.user_id)
     except ExpiredSignatureError:
         raise HTTPException(401, "Token expired")
